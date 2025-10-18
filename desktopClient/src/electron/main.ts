@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import path from "path";
-import { ipcHandle, ipcWebContentSend, isDev } from './util.js';
+import { ipcHandle, isDev } from './util.js';
 import { getPreloadPath } from './pathResolver.js';
 import { fileURLToPath } from "url";
 import { createTray } from './tray.js';

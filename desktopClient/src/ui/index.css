@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+.navbar {
+    -webkit-app-region: drag;
+}
+
+.noDrag {
+    -webkit-app-region: no-drag;
+}
+
+.no-highlight {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.my-scroll {
+  scrollbar-width: none;                   /* auto | thin | none */
+  scrollbar-color: #568ac2 #0A192F;        /* thumb | track */
+}
+
+.hide-scrollbar {
+  /* Enable scrolling but hide scrollbar visuals */
+  overflow: auto;
+
+  /* For Firefox */
+  scrollbar-width: none;
+
+  /* For IE and old Edge */
+  -ms-overflow-style: none;
+}
+
+/* For Chrome, Safari, and other WebKit browsers */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
