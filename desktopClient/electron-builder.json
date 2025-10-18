@@ -1,0 +1,16 @@
+{
+    "appId": "com.n-tejas.prepare",
+    "files": ["dist-electron", "dist-react"],
+    "extraResources": ["dist-electron/preload.cjs"],
+    "icon": "./desktopLogo.png",
+    "mac": {
+        "target": "dmg"
+    },
+    "linux": {
+        "target": "AppImage",
+        "category": "Education"
+    },
+    "win": {
+        "target": ["portable", "msi"]
+    }
+}
