@@ -99,12 +99,6 @@ export default function Operations() {
     }
 
     return (
-<<<<<<< HEAD
-        <>
-            <p>Operations</p>
-        </>
-    )
-=======
         <div className="flex-1 flex flex-col h-full">
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-600/50 flex-shrink-0">
@@ -170,5 +164,4 @@ export default function Operations() {
             </div>
         </div>
     );
->>>>>>> origin/main
 }
