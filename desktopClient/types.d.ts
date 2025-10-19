@@ -16,6 +16,7 @@ type EventPaylaodMapping = { //Different ipc mappings when responding
     startFileDrag: { filePath: string };
     openWithDefault: { target: string };
     getOperationsLog: void;
+    getAgentHistory: void;
 }
 
 type EventReturnMapping = { //Different ipc return types
@@ -39,6 +40,13 @@ type EventReturnMapping = { //Different ipc return types
         timestamp: string;
         operation: string;
         path: string;
+    }[];
+    getAgentHistory: {
+        _id: string;
+        description: string;
+        filePaths: string[];
+        createdAt: string;
+        updatedAt: string;
     }[];
 }
 
@@ -64,6 +72,13 @@ interface Window { //Used in frontend through exposed ipc functions
             timestamp: string;
             operation: string;
             path: string;
+        }[]>;
+        getAgentHistory: () => Promise<{
+            _id: string;
+            description: string;
+            filePaths: string[];
+            createdAt: string;
+            updatedAt: string;
         }[]>;
     }
 }

@@ -10,6 +10,7 @@ import z from "zod";
 import { deleteFile, openWithDefaultApp } from './fileSysOperations.js';
 import filePathData from "./filePathData.js";
 import mongoose from "mongoose";
+import { AgentHistoryData } from "./agentHistoryData.js";
 
 dotenv.config();
 
@@ -23,10 +24,14 @@ mongoose
     .then(() => console.log("Connected to MongoDB"))
     .catch((err: any) => console.log("MongoDB Connection failed", err));
 
+// Global array to track opened files
+let openedFiles: string[] = [];
+
 // File system tools
 const openFile = tool(
     ({ targetFile }: { targetFile: string }): void => {
         openWithDefaultApp(targetFile);
+        openedFiles.push(targetFile); // Track opened file
     },
     {
         name: "OpenFilepath",
@@ -97,6 +102,26 @@ const StateAnnotation = Annotation.Root({
     >,
     agentOutput: Annotation<string>,
 });
+
+// Function to generate a 5-word summary
+async function generateFiveWordSummary(output: string): Promise<string> {
+    try {
+        const summaryModel = new ChatGoogleGenerativeAI({
+            model: "gemini-2.5-flash-lite",
+            temperature: 0.3,
+        });
+        
+        const response = await summaryModel.invoke([
+            new SystemMessage("Generate exactly 5 words that summarize the following text. Be concise and descriptive."),
+            new HumanMessage(output)
+        ]);
+        
+        return typeof response.content === 'string' ? response.content : String(response.content);
+    } catch (error) {
+        console.error("Error generating summary:", error);
+        return "Agent performed file operations";
+    }
+}
 
 async function getFilePaths(state: typeof StateAnnotation.State) {
     console.log("all tags: ", allTagsInDB)
@@ -171,6 +196,9 @@ async function getFilePaths(state: typeof StateAnnotation.State) {
 
 async function executeAction(state: typeof StateAnnotation.State) {
     try {
+        // Reset opened files array for this execution
+        openedFiles = [];
+        
         const docString = state.retrievedDocs.map(
             (doc) => `Description: ${doc.description}, Filepath: "${doc.path}"`
         );
@@ -213,6 +241,21 @@ async function executeAction(state: typeof StateAnnotation.State) {
             executer.messages[executer.messages.length - 1].content;
 
         console.log("5. Agent finished");
+        
+        // Generate 5-word summary and save to database
+        try {
+            const messageContent = typeof lastMessage === 'string' ? lastMessage : String(lastMessage);
+            const summary = await generateFiveWordSummary(messageContent);
+            const historyData = new AgentHistoryData({
+                description: summary,
+                filePaths: openedFiles
+            });
+            await historyData.save();
+            console.log("6. Agent history saved:", { summary, openedFiles });
+        } catch (historyError) {
+            console.error("Error saving agent history:", historyError);
+        }
+        
         return { agentOutput: lastMessage };
     } catch (error) {
         console.error("Error in executeAction:", error);

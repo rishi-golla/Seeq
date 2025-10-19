@@ -15,6 +15,7 @@ import fs from 'fs';
 import { openWithDefaultApp } from './fileSysOperations.js';
 import ScreenShareAgent from './fileScreenShareAgent.js';
 import { startVoiceRecording, stopVoiceRecording, processAudioData } from './speechToText.js';
+import { AgentHistoryData } from './agentHistoryData.js';
 
 
 dotenv.config();
@@ -254,6 +255,20 @@ app.on('ready', () => {
       return operations;
     } catch (err) {
       console.error("Error reading operations log:", err);
+      return [];
+    }
+  });
+
+  ipcHandle("getAgentHistory", async () => {
+    try {
+      const historyRecords = await AgentHistoryData.find()
+        .sort({ createdAt: -1 }) // Most recent first
+        .limit(50) // Limit to 50 most recent records
+        .lean();
+      
+      return historyRecords;
+    } catch (err) {
+      console.error("Error fetching agent history:", err);
       return [];
     }
   });

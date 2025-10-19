@@ -22,6 +22,14 @@ export default function AiAgent({ toggleMenu }: Props) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [responseAudioPath, setResponseAudioPath] = useState<string | null>(null);
     const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
+    const [agentHistory, setAgentHistory] = useState<Array<{
+        _id: string;
+        description: string;
+        filePaths: string[];
+        createdAt: string;
+        updatedAt: string;
+    }>>([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     
     // Audio recording references
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -53,6 +61,82 @@ export default function AiAgent({ toggleMenu }: Props) {
         }
     };
 
+    const fetchAgentHistory = async () => {
+        try {
+            setIsLoadingHistory(true);
+            const history = await window.electron.getAgentHistory();
+            setAgentHistory(history);
+        } catch (error) {
+            console.error('Error fetching agent history:', error);
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
+    // Format date for semantic display
+    const formatSemanticTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMs = now.getTime() - date.getTime();
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+        if (diffInMinutes < 1) {
+            return 'Just now';
+        } else if (diffInMinutes < 60) {
+            return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+        } else if (diffInHours < 24) {
+            return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+        } else if (diffInDays === 1) {
+            return 'Yesterday';
+        } else if (diffInDays < 7) {
+            return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+        } else {
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    };
+
+    // Card component for history records
+    const HistoryCard = ({ record }: { record: typeof agentHistory[0] }) => (
+        <div className="bg-[#212226] rounded-xl py-3 px-4 mb-3 w-full max-w-full border-2 border-black/60">
+            {/* Header with semantic time */}
+            <h3 className="text-sm font-bold text-white mb-2">
+                {formatSemanticTime(record.createdAt)}
+            </h3>
+            
+            {/* Description */}
+            <p className="text-sm text-gray-400 mb-3 line-clamp-2">
+                {record.description}
+            </p>
+            
+            {/* Files opened as badges */}
+            <div className="flex flex-wrap gap-1">
+                {record.filePaths.length > 0 ? (
+                    <>
+                        {record.filePaths.slice(0, 3).map((filePath, index) => (
+                            <div key={index} className="text-xs text-white bg-[#2C2D31] border border-black/60 px-2 py-1 rounded-lg">
+                                {filePath.split('\\').pop() || filePath.split('/').pop()}
+                            </div>
+                        ))}
+                        {record.filePaths.length > 3 && (
+                            <div className="text-xs text-gray-400 bg-[#2C2D31] border border-black/60 px-2 py-1 rounded-lg">
+                                +{record.filePaths.length - 3} more
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="text-xs text-gray- bg-[#2C2D31] border text-white/70 border-black/60 px-2 py-1 rounded-lg">
+                        No files
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
     const handleSubmit = async () => {
         if (!inputValue.trim()) return;
 
@@ -70,6 +154,8 @@ export default function AiAgent({ toggleMenu }: Props) {
         try {
             const response = await window.electron.aiQuery(userMessage);
             setMessages((prev) => [...prev, { type: 'ai', content: response }]);
+            // Refresh agent history after successful query
+            fetchAgentHistory();
         } catch (error) {
             console.error('Error calling AI agent:', error);
             setMessages((prev) => [
@@ -677,15 +763,46 @@ export default function AiAgent({ toggleMenu }: Props) {
     
     useEffect(() => {
         setMenuStatus(!menuStatus);
+        if (!menuStatus) {
+            // Fetch history when menu is opened
+            fetchAgentHistory();
+        }
     }, [toggleMenu]);
+
+    // Fetch history on component mount
+    useEffect(() => {
+        fetchAgentHistory();
+    }, []);
 
     if (voiceMode) {
         return (
             <div className='flex-1 flex'>
                 {menuStatus && (
-                    <div className="flex flex-col min-w-60 bg-[#1A1B1F]">
-                        <h1 className="px-4 pt-2 font-semibold">File Intellisense</h1>
-                        <p className="text-xs px-4 text-[#7A7B82]">Complete agent operations record</p>
+                    <div className="flex flex-col min-w-80 bg-[#1A1B1F] h-full">
+                        <div className="px-3 pt-4 pb-2 border-b border-gray-700/50">
+                            <h1 className="font-semibold text-gray-200">File Intellisense</h1>
+                            <p className="text-xs text-[#7A7B82] mt-1">Complete agent operations record</p>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto px-2 py-4 record-panel-scroll">
+                            {isLoadingHistory ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-400 border-t-transparent"></div>
+                                    <span className="ml-2 text-sm text-gray-400">Loading history...</span>
+                                </div>
+                            ) : agentHistory.length > 0 ? (
+                                <div className="space-y-2">
+                                    {agentHistory.map((record) => (
+                                        <HistoryCard key={record._id} record={record} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-sm text-gray-400">No agent history yet</p>
+                                    <p className="text-xs text-gray-500 mt-1">Start using the agent to see records here</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
                 <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#141518] via-[#1a1d24] to-[#141518] relative overflow-hidden">
@@ -799,9 +916,31 @@ export default function AiAgent({ toggleMenu }: Props) {
     return (
         <div className="flex-1 flex">
             {menuStatus && (
-                <div className="flex flex-col min-w-60 bg-[#1A1B1F]">
-                    <h1 className="px-4 pt-2 font-semibold">File Intellisense</h1>
-                    <p className="text-xs px-4 text-[#7A7B82]">Complete agent operations record</p>
+                <div className="flex flex-col min-w-80 bg-[#1A1B1F] h-full">
+                    <div className="px-3 pt-4 pb-2 border-b border-gray-700/50">
+                        <h1 className="font-semibold text-gray-200">File Intellisense</h1>
+                        <p className="text-xs text-[#7A7B82] mt-1">Complete agent operations record</p>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto px-2 py-4 record-panel-scroll">
+                        {isLoadingHistory ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-400 border-t-transparent"></div>
+                                <span className="ml-2 text-sm text-gray-400">Loading history...</span>
+                            </div>
+                        ) : agentHistory.length > 0 ? (
+                            <div className="space-y-2">
+                                {agentHistory.map((record) => (
+                                    <HistoryCard key={record._id} record={record} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <p className="text-sm text-gray-400">No agent history yet</p>
+                                <p className="text-xs text-gray-500 mt-1">Start using the agent to see records here</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 

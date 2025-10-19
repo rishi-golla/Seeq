@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("electron", {
     openWithDefault: (target: string) => ipcInvoke("openWithDefault", { target }),
     startFileDrag: (filePath: string) => ipcRenderer.send("startFileDrag", { filePath }),
     getOperationsLog: () => ipcInvoke("getOperationsLog"),
+    getAgentHistory: () => ipcInvoke("getAgentHistory"),
 } satisfies Window['electron'])
 
 function ipcInvoke<Key extends keyof EventPaylaodMapping>(
