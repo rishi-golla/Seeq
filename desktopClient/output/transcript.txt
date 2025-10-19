@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 Open lecture notes for memory operations.
+=======
+Open introduction lecture note for computer architecture.
+>>>>>>> origin/main

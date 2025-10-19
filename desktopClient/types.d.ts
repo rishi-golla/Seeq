@@ -4,6 +4,7 @@ type EventPaylaodMapping = { //Different ipc mappings when responding
     onFullScreen: void;
     onMinimize: void;
     aiQuery: { query: string };
+    createDocument: { prompt: string; documentType: 'excel' | 'word' };
     startVoiceRecording: void;
     stopVoiceRecording: void;
     sendAudioData: { audioData: string };
@@ -15,6 +16,7 @@ type EventPaylaodMapping = { //Different ipc mappings when responding
     onScreenCmdPress: string;
     startFileDrag: { filePath: string };
     openWithDefault: { target: string };
+    getOperationsLog: void;
 }
 
 type EventReturnMapping = { //Different ipc return types
@@ -23,6 +25,7 @@ type EventReturnMapping = { //Different ipc return types
     onFullScreen: void;
     onMinimize: void;
     aiQuery: string;
+    createDocument: string;
     startVoiceRecording: void;
     stopVoiceRecording: void;
     sendAudioData: void;
@@ -34,6 +37,11 @@ type EventReturnMapping = { //Different ipc return types
     onScreenCmdPress: string;
     startFileDrag: void;
     openWithDefault: void;
+    getOperationsLog: {
+        timestamp: string;
+        operation: string;
+        path: string;
+    }[];
 }
 
 interface Window { //Used in frontend through exposed ipc functions
@@ -43,6 +51,7 @@ interface Window { //Used in frontend through exposed ipc functions
         onFullScreen: () => void,
         onMinimize: () => void,
         aiQuery: (query: string) => Promise<string>,
+        createDocument: (prompt: string, documentType: 'excel' | 'word') => Promise<string>,
         startVoiceRecording: () => Promise<void>,
         stopVoiceRecording: () => Promise<void>,
         sendAudioData: (audioData: string) => Promise<void>,
@@ -54,5 +63,10 @@ interface Window { //Used in frontend through exposed ipc functions
         listenOnScreenCmdPress: (callback: (data: string) => void) => void;
         startFileDrag: (filePath: string) => void;
         openWithDefault: (target: string) => Promise<void>;
+        getOperationsLog: () => Promise<{
+            timestamp: string;
+            operation: string;
+            path: string;
+        }[]>;
     }
 }

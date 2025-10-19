@@ -20,6 +20,7 @@
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.8",
     "@elevenlabs/elevenlabs-js": "^2.19.0",
+    "@hookform/resolvers": "^5.2.2",
     "@langchain/core": "^0.3.78",
     "@langchain/google-genai": "^0.2.18",
     "@langchain/langgraph": "^0.4.9",
@@ -30,16 +31,20 @@
     "@xyflow/react": "^12.8.6",
     "axios": "^1.12.2",
     "chromadb": "^3.0.17",
+    "docx": "^9.5.1",
     "dotenv": "^17.2.3",
     "mongoose": "^8.19.0",
     "os-utils": "^0.0.14",
     "path-browserify": "^1.0.1",
+    "pdf-parse": "^2.4.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-hook-form": "^7.65.0",
     "react-router-dom": "^7.7.1",
     "tailwindcss": "^4.1.13",
     "tesseract.js": "^6.0.1",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

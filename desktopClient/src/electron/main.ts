@@ -8,6 +8,7 @@ import { screen } from 'electron';
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { fileSysAgent } from './fileSysAgent.js';
+import { fileCreateAgent, FileType } from './fileCreateAgent.js';
 import fileIndexer from "./fileSysIndexer.js";
 import { generateSpeechFile } from './elevelLabs.js';
 import { ipcMain } from 'electron/main';
@@ -153,6 +154,23 @@ app.on('ready', () => {
     }
   })
 
+  ipcHandle("createDocument", async (payload) => {
+    try {
+      const { prompt, documentType } = payload;
+      console.log("Creating document with prompt:", prompt, "Type:", documentType);
+      
+      // Map document type to FileType enum
+      const fileType = documentType === 'excel' ? FileType.EXL : FileType.DOCX;
+      
+      const result = await fileCreateAgent(prompt, fileType);
+      console.log("Document creation result:", result);
+      return result;
+    } catch (error) {
+      console.error("Error in document creation handler:", error);
+      return "Error creating document. Please try again.";
+    }
+  })
+
   ipcMain.on("startFileDrag", (event, { filePath }) => {
     try {
       const normalizedPath = path.normalize(filePath);
@@ -224,6 +242,37 @@ app.on('ready', () => {
     } catch (err) {
       console.error("Error processing audio data:", err);
       return;
+    }
+  });
+
+  ipcHandle("getOperationsLog", async () => {
+    try {
+      const logPath = path.join(__dirname, '../../sandbox/logs/operations.log');
+      
+      if (!fs.existsSync(logPath)) {
+        return [];
+      }
+      
+      const logContent = fs.readFileSync(logPath, 'utf-8');
+      const lines = logContent.trim().split('\n');
+      
+      const operations = lines.map(line => {
+        // Parse format: [timestamp] OPERATION -> path
+        const match = line.match(/^\[([^\]]+)\]\s+(\w+)\s+->\s+(.+)$/);
+        if (match) {
+          return {
+            timestamp: match[1],
+            operation: match[2],
+            path: match[3]
+          };
+        }
+        return null;
+      }).filter(Boolean);
+      
+      return operations;
+    } catch (err) {
+      console.error("Error reading operations log:", err);
+      return [];
     }
   });
 
