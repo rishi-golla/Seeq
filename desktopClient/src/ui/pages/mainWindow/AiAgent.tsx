@@ -4,6 +4,7 @@ import mainIcon from '../../icons/SeeqMouthOpenTranslucent.png';
 import voiceAgent from '../../icons/aiAgent/voiceMode.svg'
 import seeqTalkingGif from '../../icons/SeeqTalking.gif';
 import seeqMouthClosed from '../../icons/SeeqMouthClosed.png';
+import seeqThinking from '../../icons/SeeqThinking.png';
 
 interface Props {
     toggleMenu: boolean;
@@ -714,7 +715,13 @@ export default function AiAgent({ toggleMenu }: Props) {
                     <div className="relative z-10 flex flex-col items-center">
                         <div className="relative mb-12">
                             <img 
-                                src={isPlaying ? seeqTalkingGif : seeqMouthClosed} 
+                                src={
+                                    isPlaying 
+                                        ? seeqTalkingGif 
+                                        : isProcessing 
+                                            ? seeqThinking 
+                                            : seeqMouthClosed
+                                } 
                                 alt="Seeq Voice Agent" 
                                 className={`w-64 h-64 rounded-full transition-all duration-300 ${
                                     isRecording 
