@@ -16,6 +16,10 @@ const automationSchema = z.object({
 type AutomationFormData = z.infer<typeof automationSchema>;
 
 export default function Automation() {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [output, setOutput] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
   const {
     register,
     handleSubmit,
@@ -31,6 +35,19 @@ export default function Automation() {
 
   const onSubmit = (data: AutomationFormData) => {
     console.log('Form submitted with data:', data);
+    setIsGenerating(true);
+    setError('');
+    setOutput('');
+
+    try {
+      const result = await window.electron.createDocument(data.prompt, data.documentType);
+      setOutput(result);
+    } catch (err) {
+      console.error('Error creating document:', err);
+      setError('Failed to create document. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Watch form values for real-time updates
@@ -80,71 +97,30 @@ export default function Automation() {
                 type="radio"
                 value="excel"
                 {...register('documentType')}
-                className="hidden peer"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-800"
               />
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-600/30 to-emerald-600/30 rounded-xl opacity-0 peer-checked:opacity-100 transition-opacity duration-300 blur-sm"></div>
-                <div className="relative bg-gradient-to-br from-[#2a2d35] to-[#212226] border-2 border-gray-700 peer-checked:border-green-500 rounded-xl p-3 transition-all duration-300 peer-checked:shadow-lg peer-checked:shadow-green-500/30 hover:bg-gradient-to-br hover:from-green-600/30 hover:to-emerald-600/30 peer-checked:hover:bg-gradient-to-br peer-checked:hover:from-[#2a2d35] peer-checked:hover:to-[#212226]">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
-                        watchedValues.documentType === 'excel' 
-                          ? 'bg-gradient-to-br from-green-600/20 to-emerald-600/20 shadow-lg shadow-green-500/30' 
-                          : 'bg-gray-700'
-                      }`}>
-                        <img src={excelIcon} alt="Excel" className="w-6 h-6" />
+              <label htmlFor="excel" className="ml-3 block text-sm font-medium text-gray-300">
+                Excel
+              </label>
                       </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <h4 className={`text-sm font-semibold transition-colors duration-300 ${
-                          watchedValues.documentType === 'excel' ? 'text-green-400' : 'text-gray-300'
-                        }`}>Excel</h4>
-                      </div>
-                      <p className="text-xs text-gray-400 leading-tight">Spreadsheets, data tables, charts</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </label>
+            <div className="text-xs text-gray-500 ml-7 mb-3">Spreadsheets, data tables, charts, calculations</div>
             
-            {/* Word Option */}
-            <label htmlFor="word" className="cursor-pointer">
+            <div className="flex items-center">
               <input
                 id="word"
                 type="radio"
                 value="word"
                 {...register('documentType')}
-                className="hidden peer"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-800"
               />
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/30 to-indigo-600/30 rounded-xl opacity-0 peer-checked:opacity-100 transition-opacity duration-300 blur-sm"></div>
-                <div className="relative bg-gradient-to-br from-[#2a2d35] to-[#212226] border-2 border-gray-700 peer-checked:border-blue-500 rounded-xl p-3 transition-all duration-300 peer-checked:shadow-lg peer-checked:shadow-blue-500/30 hover:bg-gradient-to-br hover:from-blue-600/30 hover:to-indigo-600/30 peer-checked:hover:bg-gradient-to-br peer-checked:hover:from-[#2a2d35] peer-checked:hover:to-[#212226]">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
-                        watchedValues.documentType === 'word' 
-                          ? 'bg-gradient-to-br from-blue-600/20 to-indigo-600/20 shadow-lg shadow-blue-500/30' 
-                          : 'bg-gray-700'
-                      }`}>
-                        <img src={wordIcon} alt="Word" className="w-6 h-6" />
+              <label htmlFor="word" className="ml-3 block text-sm font-medium text-gray-300">
+                Word
+              </label>
                       </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <h4 className={`text-sm font-semibold transition-colors duration-300 ${
-                          watchedValues.documentType === 'word' ? 'text-blue-400' : 'text-gray-300'
-                        }`}>Word</h4>
-                      </div>
-                      <p className="text-xs text-gray-400 leading-tight">Reports, letters, proposals</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </label>
+            <div className="text-xs text-gray-500 ml-7 mb-3">Reports, letters, proposals, formatted text</div>
             
             {errors.documentType && (
-              <p className="text-xs text-red-400 mt-2">{errors.documentType.message}</p>
+              <p className="text-xs text-red-400">{errors.documentType.message}</p>
             )}
           </div>
           
@@ -152,9 +128,17 @@ export default function Automation() {
           <button
             type="submit"
             onClick={handleSubmit(onSubmit)}
-            className="w-full mt-3 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+            disabled={isGenerating}
+            className="w-full mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Generate Document
+            {isGenerating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Generating...
+              </>
+            ) : (
+              'Generate Document'
+            )}
           </button>
         </div>
       </div>
@@ -162,10 +146,61 @@ export default function Automation() {
       {/* Bottom card - Full width - Output display */}
       <div className="flex-1 rounded-lg shadow-sm border border-gray-600 p-4 flex flex-col" style={{ backgroundColor: '#1A1B1F' }}>
         <div className="mb-3">
-          <h3 className="text-xl font-semibold text-white mb-1 tracking-tight">Output</h3>
-          <p className="text-xs text-gray-400">Your generated document will appear here. Download or copy the content when ready.</p>
+          <h3 className="text-lg font-medium text-white mb-1">Output</h3>
+          <p className="text-xs text-gray-400">
+            {isGenerating 
+              ? 'Generating your document...' 
+              : output 
+                ? 'Document generated successfully!' 
+                : 'Your generated document will appear here. Download or copy the content when ready.'
+            }
+          </p>
         </div>
-        <div className="flex-1 bg-gray-800 rounded-md border border-gray-600 p-4 flex items-center justify-center">
+        <div className="flex-1 bg-gray-800 rounded-md border border-gray-600 p-4 flex flex-col">
+          {isGenerating ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-blue-600 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                </div>
+                <p className="text-gray-400 text-sm">Generating document...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-red-600 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            </div>
+          ) : output ? (
+            <div className="flex-1 flex flex-col">
+              <div className="flex-1 bg-gray-900 rounded-md p-4 overflow-y-auto">
+                <pre className="text-gray-300 text-sm whitespace-pre-wrap font-mono">
+                  {output}
+                </pre>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => navigator.clipboard.writeText(output)}
+                  className="px-3 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                >
+                  Copy to Clipboard
+                </button>
+                <button
+                  onClick={() => setOutput('')}
+                  className="px-3 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-700 flex items-center justify-center">
               <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

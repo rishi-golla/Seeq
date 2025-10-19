@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 Hey SEEK, I have an assignment coming up called Assignment 2. I downloaded it, but I need you to find it. Could you please open it for me?
+=======
+Open introduction lecture note for computer architecture.
+>>>>>>> main

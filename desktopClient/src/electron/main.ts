@@ -8,6 +8,7 @@ import { screen } from 'electron';
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { fileSysAgent } from './fileSysAgent.js';
+import { fileCreateAgent, FileType } from './fileCreateAgent.js';
 import fileIndexer from "./fileSysIndexer.js";
 import { generateSpeechFile } from './elevelLabs.js';
 import { ipcMain } from 'electron/main';
@@ -155,6 +156,23 @@ app.on('ready', () => {
     } catch (error) {
       console.error("Error in AI query handler:", error);
       return "Error processing your request. Please try again.";
+    }
+  })
+
+  ipcHandle("createDocument", async (payload) => {
+    try {
+      const { prompt, documentType } = payload;
+      console.log("Creating document with prompt:", prompt, "Type:", documentType);
+      
+      // Map document type to FileType enum
+      const fileType = documentType === 'excel' ? FileType.EXL : FileType.DOCX;
+      
+      const result = await fileCreateAgent(prompt, fileType);
+      console.log("Document creation result:", result);
+      return result;
+    } catch (error) {
+      console.error("Error in document creation handler:", error);
+      return "Error creating document. Please try again.";
     }
   })
 

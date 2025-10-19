@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld("electron", {
     onFullScreen: () => ipcInvoke("onFullScreen"),
     onMinimize: () => ipcInvoke("onMinimize"),
     aiQuery: (query: string) => ipcInvoke("aiQuery", { query }),
+    createDocument: (prompt: string, documentType: 'excel' | 'word') => ipcInvoke("createDocument", { prompt, documentType }),
     startVoiceRecording: () => ipcInvoke("startVoiceRecording"),
     stopVoiceRecording: () => ipcInvoke("stopVoiceRecording"),
     sendAudioData: (audioData: string) => ipcInvoke("sendAudioData", { audioData }),
