@@ -2,7 +2,7 @@
 export default function Opeartions() {
     return (
         <>
-        <p>Operations</p>
+            <p>Operations</p>
         </>
     )
 }
