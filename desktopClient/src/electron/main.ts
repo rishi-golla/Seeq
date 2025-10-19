@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut, nativeImage } from 'electron'
+import { app, BrowserWindow, globalShortcut, nativeImage, session } from 'electron'
 import path from "path";
 import { ipcHandle, ipcWebContentSend, isDev } from './util.js';
 import { getPreloadPath } from './pathResolver.js';
@@ -14,6 +14,7 @@ import { ipcMain } from 'electron/main';
 import fs from 'fs';
 import { openWithDefaultApp } from './fileSysOperations.js';
 import ScreenShareAgent from './fileScreenShareAgent.js';
+import { startVoiceRecording, stopVoiceRecording, processAudioData } from './speechToText.js';
 
 
 dotenv.config();
@@ -51,6 +52,7 @@ app.on('ready', () => {
     height: 900,
     webPreferences: {
       preload: getPreloadPath(),
+      webSecurity: true,
     },
     icon: path.join(__dirname, 'desktopIconMain.ico')
   });
@@ -86,6 +88,14 @@ app.on('ready', () => {
   } else {
     mainWindow.loadFile(path.join(app.getAppPath() + '/dist-react/index.html'));
   }
+
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'media') {
+      callback(true);
+    } else {
+      callback(false);
+    }
+  });
 
   function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -124,7 +134,6 @@ app.on('ready', () => {
     } else {
       mainWindow.maximize();
     }
-    await generateSpeechFile("This is a test of trigger from frontend", './output');
     console.log("Finished processing AI Recording Res")
   })
 
@@ -179,6 +188,41 @@ app.on('ready', () => {
       return;
     } catch (err) {
       console.error("Error opening with default app:", err);
+      return;
+    }
+  });
+  
+  ipcHandle("startVoiceRecording", async () => {
+    try {
+      await startVoiceRecording();
+      return;
+    } catch (err) {
+      console.error("Error starting voice recording:", err);
+      return;
+    }
+  });
+  
+  ipcHandle("stopVoiceRecording", async () => {
+    try {
+      await stopVoiceRecording();
+      return;
+    } catch (err) {
+      console.error("Error stopping voice recording:", err);
+      return;
+    }
+  });
+  
+  ipcHandle("sendAudioData", async (payload) => {
+    try {
+      // Convert base64 string to buffer
+      const audioData = Buffer.from(payload.audioData, 'base64');
+      
+      // Process audio data immediately - transcribe and save to file
+      await processAudioData(audioData);
+      
+      return;
+    } catch (err) {
+      console.error("Error processing audio data:", err);
       return;
     }
   });

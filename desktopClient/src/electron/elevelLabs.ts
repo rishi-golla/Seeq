@@ -9,14 +9,6 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const VOICE_ID = 'Xb7hH8MSUJpSbSDYk0k2';
 const MODEL = 'eleven_flash_v2_5';
 
-/**
- * Converts text to speech using ElevenLabs WebSocket API.
- * Always overwrites the same file in outputDir/output.mp3.
- *
- * @param text The text to convert to speech.
- * @param outputDir Directory where output.mp3 will be written.
- * @returns Promise<string> Path to the generated audio file.
- */
 export async function generateSpeechFile(
   text: string,
   outputDir = './output'
@@ -64,8 +56,30 @@ export async function generateSpeechFile(
     });
 
     websocket.on('close', () => {
+      // End the write stream and wait for 'finish' event to ensure file is completely written
       writeStream.end();
-      resolve(filePath);
+      
+      writeStream.on('finish', () => {
+        console.log(`Audio file write stream finished. File should be complete at: ${filePath}`);
+        
+        // Add a small delay to ensure filesystem has completed writing
+        setTimeout(() => {
+          // Verify the file exists and has content
+          try {
+            const stats = fs.statSync(filePath);
+            console.log(`Audio file size: ${stats.size} bytes`);
+            
+            if (stats.size > 0) {
+              resolve(filePath);
+            } else {
+              reject(new Error('Generated audio file is empty'));
+            }
+          } catch (error) {
+            console.error('Error verifying audio file:', error);
+            reject(error);
+          }
+        }, 500); // 500ms delay to ensure file is fully flushed to disk
+      });
     });
 
     websocket.on('error', (err) => {

@@ -4,6 +4,10 @@ type EventPaylaodMapping = { //Different ipc mappings when responding
     onFullScreen: void;
     onMinimize: void;
     aiQuery: { query: string };
+    startVoiceRecording: void;
+    stopVoiceRecording: void;
+    sendAudioData: { audioData: string };
+    audioReady: string; // The audio file path
     onScreenShare: {
         output: string;
         filePaths: string[];
@@ -19,6 +23,10 @@ type EventReturnMapping = { //Different ipc return types
     onFullScreen: void;
     onMinimize: void;
     aiQuery: string;
+    startVoiceRecording: void;
+    stopVoiceRecording: void;
+    sendAudioData: void;
+    audioReady: string; // Path to the audio file
     onScreenShare: {
         output: string;
         filePaths: string[];
@@ -35,6 +43,10 @@ interface Window { //Used in frontend through exposed ipc functions
         onFullScreen: () => void,
         onMinimize: () => void,
         aiQuery: (query: string) => Promise<string>,
+        startVoiceRecording: () => Promise<void>,
+        stopVoiceRecording: () => Promise<void>,
+        sendAudioData: (audioData: string) => Promise<void>,
+        listenAudioReady: (callback: (audioPath: string) => void) => void,
         listenScreenShare: (callback: (data: {
             output: string;
             filePaths: string[];

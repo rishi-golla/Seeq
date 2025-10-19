@@ -76,7 +76,7 @@ const allTagsInDB: string[] = tagDocs.flatMap((doc) => doc.tags || []);
 // Model instantiation
 const agentModel = new ChatGoogleGenerativeAI({
     model: "gemini-2.5-flash-lite",
-    temperature: 1,
+    temperature: 0.5,
 });
 const fileAgentHandler = createReactAgent({
     llm: agentModel,
@@ -178,6 +178,10 @@ async function executeAction(state: typeof StateAnnotation.State) {
         const executer = await fileAgentHandler.invoke({
             messages: [
                 new SystemMessage(`
+                    Your name is Seeq, a intelligent file operations agent. You job is to run tools on 
+                    anything similar to what the user wants. Even if one word is in the semantic description 
+                    given for a filepath, use it
+
                     You are a file system AI agent with access to two tools:
                     1. OpenFilepath — opens a given file path.
                     2. RemoveFile — deletes a given file path.
@@ -199,7 +203,6 @@ async function executeAction(state: typeof StateAnnotation.State) {
 
                     If the user asks for context or information (not an action), do not call any tools—only respond in text.
 
-                    You must be intelligent, if provided a file for lecture 7 but user opted for lecture 2, say the lecture was not found
                     After performing an action, provide a short, polite confirmation message describing what was done.
                     `),
                 new HumanMessage(state.userInput),
@@ -227,6 +230,7 @@ const agentWorkflow = new StateGraph(StateAnnotation)
 
 export async function fileSysAgent(query: string) {
     let output: string;
+    console.log(query);
     try {
         const state = await agentWorkflow.invoke({
             userInput: query,
