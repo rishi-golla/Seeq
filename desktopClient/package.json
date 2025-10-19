@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.8",
+    "@elevenlabs/elevenlabs-js": "^2.19.0",
     "@langchain/core": "^0.3.78",
     "@langchain/google-genai": "^0.2.18",
     "@langchain/langgraph": "^0.4.9",
@@ -36,14 +37,17 @@
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.7.1",
     "tailwindcss": "^4.1.13",
-    "tesseract.js": "^6.0.1"
+    "tesseract.js": "^6.0.1",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@types/dotenv": "^6.1.1",
     "@types/os-utils": "^0.0.4",
     "@types/path-browserify": "^1.0.3",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.0.3",
     "cross-env": "^10.0.0",
     "electron": "^38.1.2",

@@ -5,10 +5,16 @@ contextBridge.exposeInMainWorld("electron", {
     onPopupClose: () => ipcInvoke("onPopupClose"),
     onFullScreen: () => ipcInvoke("onFullScreen"),
     onMinimize: () => ipcInvoke("onMinimize"),
-    aiQuery: (query: string) => ipcInvoke("aiQuery", {query}),
+    aiQuery: (query: string) => ipcInvoke("aiQuery", { query }),
+    listenScreenShare: (callback: (data: {
+        output: string;
+        filePaths: string[];
+    }) => void) => ipcOn("onScreenShare", callback),
+    listenOnScreenCmdPress: (callback: (data: string) => void) => ipcOn("onScreenCmdPress", callback),
+    openWithDefault: (target: string) => ipcInvoke("openWithDefault", { target }),
+    startFileDrag: (filePath: string) => ipcRenderer.send("startFileDrag", { filePath }),
 } satisfies Window['electron'])
 
-//type safety ipc adapters
 function ipcInvoke<Key extends keyof EventPaylaodMapping>(
     key: Key,
     payload?: EventPaylaodMapping[Key]
