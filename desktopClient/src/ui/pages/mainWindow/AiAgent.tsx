@@ -878,7 +878,7 @@ export default function AiAgent({ toggleMenu }: Props) {
                                             handleSubmit();
                                         }
                                     }}
-                                    placeholder="Ask FileAI Something..."
+                                    placeholder="Ask Seeq Something..."
                                     className="text-gray-200 w-full bg-transparent placeholder-gray-400 focus:outline-none focus:ring-0 text-base resize-none overflow-y-auto max-h-32 min-h-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
                                     disabled={isLoading}
                                     rows={1}
