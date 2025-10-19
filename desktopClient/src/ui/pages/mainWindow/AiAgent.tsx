@@ -806,7 +806,7 @@ export default function AiAgent({ toggleMenu }: Props) {
             )}
 
             <div className="flex-1 flex justify-center bg-gradient-to-br from-[#141518] via-[#1a1d24] to-[#141518]">
-                <div className="flex flex-col gap-6 w-160 max-h-full">
+                <div className="flex flex-col gap-6 w-160 max-h-full min-h-0">
                     {/* Chat render area */}
                     <div className="flex-1 flex px-2 py-4 flex-col min-h-0 overflow-hidden">
                         {showMessages ? (
@@ -856,10 +856,12 @@ export default function AiAgent({ toggleMenu }: Props) {
                                 )}
                             </div>
                         ) : (
-                            <div className="flex-1 flex flex-col gap-3 items-center justify-center animate-fade-in">
-                                <img src={mainIcon} className="w-120 no-highlight animate-float" />
-                                <h1 className="font-semibold text-3xl text-gray-300 animate-slide-up" style={{ animationDelay: '0.1s' }}>Hi! I am Seeq.</h1>
-                                <h1 className="font-semibold text-xl text-gray-400 animate-slide-up" style={{ animationDelay: '0.2s' }}>I can help you with all your file troubles.</h1>
+                            <div className="flex-1 flex flex-col gap-4 items-center justify-center animate-fade-in px-4 min-h-0">
+                                <img src={mainIcon} className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 no-highlight animate-float flex-shrink-0" />
+                                <div className="text-center space-y-2 flex-shrink-0">
+                                    <h1 className="font-semibold text-2xl sm:text-3xl text-gray-300 animate-slide-up" style={{ animationDelay: '0.1s' }}>Hi! I am Seeq.</h1>
+                                    <h2 className="font-semibold text-lg sm:text-xl text-gray-400 animate-slide-up" style={{ animationDelay: '0.2s' }}>I can help you with all your file troubles.</h2>
+                                </div>
                             </div>
                         )}
                     </div>
