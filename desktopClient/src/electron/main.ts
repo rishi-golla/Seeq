@@ -7,6 +7,8 @@ import { createTray } from './tray.js';
 import { screen } from 'electron';
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { fileSysAgent } from './fileSysAgent.js';
+import fileIndexer from "./fileSysIndexer.js";
 
 dotenv.config();
 
@@ -85,6 +87,7 @@ app.on('ready', () => {
 
   mainWindow.once("ready-to-show", async () => {
     try {
+      await fileIndexer();
       await sleep(2000);
       if (splash) {
         splash.close();
@@ -118,6 +121,16 @@ app.on('ready', () => {
 
   ipcHandle("onMinimize", () => {
     mainWindow.minimize();
+  })
+
+  ipcHandle("aiQuery", async (payload) => {
+    try {
+      const result = await fileSysAgent(payload.query);
+      return result;
+    } catch (error) {
+      console.error("Error in AI query handler:", error);
+      return "Error processing your request. Please try again.";
+    }
   })
 
 

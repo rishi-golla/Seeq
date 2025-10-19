@@ -3,6 +3,7 @@ type EventPaylaodMapping = { //Different ipc mappings when responding
     onPopupClose: void;
     onFullScreen: void;
     onMinimize: void;
+    aiQuery: { query: string };
 }
 
 type EventReturnMapping = { //Different ipc return types
@@ -10,6 +11,7 @@ type EventReturnMapping = { //Different ipc return types
     onPopupClose: void;
     onFullScreen: void;
     onMinimize: void;
+    aiQuery: string;
 }
 
 interface Window { //Used in frontend through exposed ipc functions
@@ -18,5 +20,6 @@ interface Window { //Used in frontend through exposed ipc functions
         onPopupClose: () => void,
         onFullScreen: () => void,
         onMinimize: () => void,
+        aiQuery: (query: string) => Promise<string>,
     }
 }

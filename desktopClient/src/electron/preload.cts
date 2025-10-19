@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("electron", {
     onPopupClose: () => ipcInvoke("onPopupClose"),
     onFullScreen: () => ipcInvoke("onFullScreen"),
     onMinimize: () => ipcInvoke("onMinimize"),
+    aiQuery: (query: string) => ipcInvoke("aiQuery", {query}),
 } satisfies Window['electron'])
 
 //type safety ipc adapters
