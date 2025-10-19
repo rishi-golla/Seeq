@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import send from '../../icons/aiAgent/send.svg';
-import mainIcon from '../../icons/aiAgent/SeeqFaded.png';
+import mainIcon from '../../icons/SeeqMouthOpenTranslucent.png';
 import voiceAgent from '../../icons/aiAgent/voiceMode.svg'
 import seeqTalkingGif from '../../icons/SeeqTalking.gif';
 import seeqMouthClosed from '../../icons/SeeqMouthClosed.png';
+import seeqThinking from '../../icons/SeeqThinking.png';
 
 interface Props {
     toggleMenu: boolean;
@@ -29,6 +30,7 @@ export default function AiAgent({ toggleMenu }: Props) {
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const silenceDetectionRef = useRef<{
         timer: NodeJS.Timeout | null;
         counter: number;
@@ -41,11 +43,27 @@ export default function AiAgent({ toggleMenu }: Props) {
         maxSilence: 8, // Stop after 4 seconds of silence (8 * 500ms)
     });
 
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInputValue(e.target.value);
+        
+        // Auto-resize textarea
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        }
+    };
+
     const handleSubmit = async () => {
         if (!inputValue.trim()) return;
 
         const userMessage = inputValue.trim();
         setInputValue('');
+        
+        // Reset textarea height
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+        }
+        
         setIsLoading(true);
         setMessages((prev) => [...prev, { type: 'user', content: userMessage }]);
 
@@ -697,7 +715,13 @@ export default function AiAgent({ toggleMenu }: Props) {
                     <div className="relative z-10 flex flex-col items-center">
                         <div className="relative mb-12">
                             <img 
-                                src={isPlaying ? seeqTalkingGif : seeqMouthClosed} 
+                                src={
+                                    isPlaying 
+                                        ? seeqTalkingGif 
+                                        : isProcessing 
+                                            ? seeqThinking 
+                                            : seeqMouthClosed
+                                } 
                                 alt="Seeq Voice Agent" 
                                 className={`w-64 h-64 rounded-full transition-all duration-300 ${
                                     isRecording 
@@ -781,8 +805,8 @@ export default function AiAgent({ toggleMenu }: Props) {
                 </div>
             )}
 
-            <div className="flex-1 flex justify-center">
-                <div className="flex flex-col gap-6 w-160 max-h-full">
+            <div className="flex-1 flex justify-center bg-gradient-to-br from-[#141518] via-[#1a1d24] to-[#141518]">
+                <div className="flex flex-col gap-6 w-160 max-h-full min-h-0">
                     {/* Chat render area */}
                     <div className="flex-1 flex px-2 py-4 flex-col min-h-0 overflow-hidden">
                         {showMessages ? (
@@ -790,7 +814,8 @@ export default function AiAgent({ toggleMenu }: Props) {
                                 {messages.map((message, index) => (
                                     <div
                                         key={index}
-                                        className={`max-w-[80%] ${message.type === 'user' ? 'self-end' : ''}`}
+                                        className={`max-w-[80%] ${message.type === 'user' ? 'self-end' : ''} animate-fade-in-up`}
+                                        style={{ animationDelay: `${index * 0.05}s` }}
                                     >
                                         <div
                                             className={`flex items-center gap-2 mb-2 ${message.type === 'user' ? 'justify-end' : ''
@@ -799,8 +824,8 @@ export default function AiAgent({ toggleMenu }: Props) {
                                             {message.type === 'ai' && <p className="text-sm text-white/60">9:18 PM</p>}
                                             <div
                                                 className={`px-4 py-0.5 text-xs rounded-xl ${message.type === 'user'
-                                                    ? 'bg-[#1E5EFF]/46 border-2 border-[#7CB3FF]'
-                                                    : 'bg-[#00C853]/46 border-2 border-[#8CF4B3]'
+                                                    ? 'bg-gradient-to-r from-blue-600/40 to-indigo-600/40 border border-blue-500/50'
+                                                    : 'bg-gradient-to-r from-green-600/40 to-emerald-600/40 border border-green-500/50'
                                                     }`}
                                             >
                                                 {message.type === 'user' ? 'You' : 'Seeq'}
@@ -808,7 +833,10 @@ export default function AiAgent({ toggleMenu }: Props) {
                                             {message.type === 'user' && <p className="text-sm text-white/60">9:18 PM</p>}
                                         </div>
                                         <div
-                                            className={`text-white px-3 py-2 rounded-lg w-fit break-words whitespace-pre-wrap ${message.type === 'user' ? 'bg-[#212226] self-end' : 'bg-[#212226]'
+                                            className={`text-white px-4 py-3 rounded-2xl w-fit break-words whitespace-pre-wrap shadow-lg transition-all hover:shadow-xl ${
+                                                message.type === 'user' 
+                                                    ? 'bg-gradient-to-br from-[#2a2d35] to-[#212226] border border-gray-700/50' 
+                                                    : 'bg-gradient-to-br from-[#2a2d35] to-[#212226] border border-gray-700/50'
                                                 }`}
                                         >
                                             {message.content}
@@ -816,62 +844,79 @@ export default function AiAgent({ toggleMenu }: Props) {
                                     </div>
                                 ))}
                                 {isLoading && (
-                                    <div className="bg-[#224366] text-white p-3 rounded-lg w-fit">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                            <span>Thinking...</span>
+                                    <div className="bg-gradient-to-r from-blue-600/20 to-indigo-600/20 backdrop-blur-sm border border-blue-500/30 text-white px-5 py-3 rounded-2xl w-fit shadow-lg animate-fade-in">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="relative">
+                                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-400 border-t-transparent"></div>
+                                                <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-sm"></div>
+                                            </div>
+                                            <span className="font-medium">Thinking...</span>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <div className="flex-1 flex flex-col gap-1 items-center pt-5">
-                                <h1 className="font-semibold text-2xl text-gray-400">Ask me anything</h1>
-                                <h1 className="font-semibold text-2xl">Can help you with all your file troubles</h1>
-                                <img src={mainIcon} className="w-120 no-highlight" />
+                            <div className="flex-1 flex flex-col gap-4 items-center justify-center animate-fade-in px-4 min-h-0">
+                                <img src={mainIcon} className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 no-highlight animate-float flex-shrink-0" />
+                                <div className="text-center space-y-2 flex-shrink-0">
+                                    <h1 className="font-semibold text-2xl sm:text-3xl text-gray-300 animate-slide-up" style={{ animationDelay: '0.1s' }}>Hi! I am Seeq.</h1>
+                                    <h2 className="font-semibold text-lg sm:text-xl text-gray-400 animate-slide-up" style={{ animationDelay: '0.2s' }}>I can help you with all your file troubles.</h2>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     {/* Input area */}
-                    <div className="px-2 mb-6 flex-shrink-0 w-full">
-                        <div className="bg-[#282A2F] rounded-lg flex flex-col px-6 py-4 w-full">
-                            <div className="flex-1 flex items-center border-b border-gray-600 pb-2">
-                                <input
+                    <div className="px-2 mb-8 flex-shrink-0 w-full">
+                        <div className="bg-[#282A2F] rounded-2xl flex flex-col px-6 py-4 w-full shadow-lg border border-gray-700/30 transition-all hover:border-gray-600/50 hover:shadow-xl">
+                            <div className="flex-1 border-b border-gray-600 pb-3">
+                                <textarea
+                                    ref={textareaRef}
                                     value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                                    placeholder="Ask FileAI Something..."
-                                    className="text-gray-200 flex-1 bg-transparent placeholder-gray-400 focus:outline-none focus:ring-0"
+                                    onChange={handleTextareaChange}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSubmit();
+                                        }
+                                    }}
+                                    placeholder="Ask Seeq Something..."
+                                    className="text-gray-200 w-full bg-transparent placeholder-gray-400 focus:outline-none focus:ring-0 text-base resize-none overflow-y-auto max-h-32 min-h-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
                                     disabled={isLoading}
+                                    rows={1}
                                 />
                             </div>
-                            <div className="flex justify-between items-center pt-2">
-                                <div className="flex gap-2">
+                            <div className="flex justify-between items-center pt-3">
+                                <div className="flex gap-3 items-center">
                                     <button
-                                        onClick={() => setInputValue('')}
-                                        className="bg-[#4E5057] px-4 py-1 rounded-xl text-white font-medium hover:bg-gray-600 transition-all"
+                                        onClick={() => {
+                                            setInputValue('');
+                                            if (textareaRef.current) {
+                                                textareaRef.current.style.height = 'auto';
+                                            }
+                                        }}
+                                        className="bg-gradient-to-r from-gray-600 to-gray-700 px-5 py-2 rounded-xl text-white font-medium hover:from-gray-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
                                     >
                                         <p className="text-sm">Clear</p>
                                     </button>
-                                    <p className="bg-[#4E5057] px-4 py-1 rounded-xl text-sm text-white/80">
-                                        Requests are destructive, be advised
-                                    </p>
+                                    <div className="bg-amber-600/20 border border-amber-600/40 px-4 py-2 rounded-xl">
+                                        <p className="text-sm text-amber-200/90">Requests are destructive</p>
+                                    </div>
                                 </div>
                                 {inputValue.trim() ? (
                                     <button
                                         onClick={handleSubmit}
                                         disabled={isLoading}
-                                        className="bg-[#4E5057] p-2 rounded-xl text-white font-medium hover:opacity-80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="bg-gradient-to-r from-gray-600 to-gray-700 p-3 rounded-xl text-white font-medium hover:from-gray-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
                                     >
-                                        <img src={send} className="w-4" />
+                                        <img src={send} className="w-5 h-5" />
                                     </button>
                                 ) : (
                                     <button
                                         onClick={() => {setVoiceMode(true)}}
-                                        className={`bg-[#4E5057] p-2 rounded-xl text-white hover:opacity-80 transition-all`}
+                                        className="bg-gradient-to-r from-gray-600 to-gray-700 p-3 rounded-xl text-white hover:from-gray-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
                                     >
-                                        <img src={voiceAgent} className="w-4" />
+                                        <img src={voiceAgent} className="w-5 h-5" />
                                     </button>
                                 )}
                             </div>
