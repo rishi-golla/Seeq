@@ -227,6 +227,37 @@ app.on('ready', () => {
     }
   });
 
+  ipcHandle("getOperationsLog", async () => {
+    try {
+      const logPath = path.join(__dirname, '../../sandbox/logs/operations.log');
+      
+      if (!fs.existsSync(logPath)) {
+        return [];
+      }
+      
+      const logContent = fs.readFileSync(logPath, 'utf-8');
+      const lines = logContent.trim().split('\n');
+      
+      const operations = lines.map(line => {
+        // Parse format: [timestamp] OPERATION -> path
+        const match = line.match(/^\[([^\]]+)\]\s+(\w+)\s+->\s+(.+)$/);
+        if (match) {
+          return {
+            timestamp: match[1],
+            operation: match[2],
+            path: match[3]
+          };
+        }
+        return null;
+      }).filter(Boolean);
+      
+      return operations;
+    } catch (err) {
+      console.error("Error reading operations log:", err);
+      return [];
+    }
+  });
+
   globalShortcut.register('Control+Shift+Q', () => {
     if (popWindow) {
       if (popWindow.isVisible()) {

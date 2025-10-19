@@ -15,6 +15,7 @@ type EventPaylaodMapping = { //Different ipc mappings when responding
     onScreenCmdPress: string;
     startFileDrag: { filePath: string };
     openWithDefault: { target: string };
+    getOperationsLog: void;
 }
 
 type EventReturnMapping = { //Different ipc return types
@@ -34,6 +35,11 @@ type EventReturnMapping = { //Different ipc return types
     onScreenCmdPress: string;
     startFileDrag: void;
     openWithDefault: void;
+    getOperationsLog: {
+        timestamp: string;
+        operation: string;
+        path: string;
+    }[];
 }
 
 interface Window { //Used in frontend through exposed ipc functions
@@ -54,5 +60,10 @@ interface Window { //Used in frontend through exposed ipc functions
         listenOnScreenCmdPress: (callback: (data: string) => void) => void;
         startFileDrag: (filePath: string) => void;
         openWithDefault: (target: string) => Promise<void>;
+        getOperationsLog: () => Promise<{
+            timestamp: string;
+            operation: string;
+            path: string;
+        }[]>;
     }
 }
