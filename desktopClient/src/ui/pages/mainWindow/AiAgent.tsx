@@ -102,34 +102,34 @@ export default function AiAgent({ toggleMenu }: Props) {
 
     // Card component for history records
     const HistoryCard = ({ record }: { record: typeof agentHistory[0] }) => (
-        <div className="bg-[#212226] rounded-xl py-3 px-4 mb-3 w-full max-w-full border-2 border-black/60">
+        <div className="bg-[#212226] rounded-xl py-3 px-4 mb-3 w-full border-2 border-black/60 overflow-hidden">
             {/* Header with semantic time */}
-            <h3 className="text-sm font-bold text-white mb-2">
+            <h3 className="text-sm font-bold text-white mb-2 truncate">
                 {formatSemanticTime(record.createdAt)}
             </h3>
             
             {/* Description */}
-            <p className="text-sm text-gray-400 mb-3 line-clamp-2">
+            <p className="text-sm text-gray-400 mb-3 line-clamp-2 break-words">
                 {record.description}
             </p>
             
             {/* Files opened as badges */}
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 min-w-0">
                 {record.filePaths.length > 0 ? (
                     <>
                         {record.filePaths.slice(0, 3).map((filePath, index) => (
-                            <div key={index} className="text-xs text-white bg-[#2C2D31] border border-black/60 px-2 py-1 rounded-lg">
+                            <div key={index} className="text-xs text-white bg-[#2C2D31] border border-black/60 px-2 py-1 rounded-lg flex-shrink-0 max-w-[120px] truncate" title={filePath.split('\\').pop() || filePath.split('/').pop()}>
                                 {filePath.split('\\').pop() || filePath.split('/').pop()}
                             </div>
                         ))}
                         {record.filePaths.length > 3 && (
-                            <div className="text-xs text-gray-400 bg-[#2C2D31] border border-black/60 px-2 py-1 rounded-lg">
+                            <div className="text-xs text-gray-400 bg-[#2C2D31] border border-black/60 px-2 py-1 rounded-lg flex-shrink-0">
                                 +{record.filePaths.length - 3} more
                             </div>
                         )}
                     </>
                 ) : (
-                    <div className="text-xs text-gray- bg-[#2C2D31] border text-white/70 border-black/60 px-2 py-1 rounded-lg">
+                    <div className="text-xs text-gray-400 bg-[#2C2D31] border border-black/60 px-2 py-1 rounded-lg flex-shrink-0">
                         No files
                     </div>
                 )}
@@ -154,8 +154,7 @@ export default function AiAgent({ toggleMenu }: Props) {
         try {
             const response = await window.electron.aiQuery(userMessage);
             setMessages((prev) => [...prev, { type: 'ai', content: response }]);
-            // Refresh agent history after successful query
-            fetchAgentHistory();
+            // Agent history will be automatically refreshed via IPC event
         } catch (error) {
             console.error('Error calling AI agent:', error);
             setMessages((prev) => [
@@ -774,6 +773,22 @@ export default function AiAgent({ toggleMenu }: Props) {
         fetchAgentHistory();
     }, []);
 
+    // Listen for agent history updates from the main process
+    useEffect(() => {
+        const handleAgentHistoryUpdated = () => {
+            console.log('Agent history updated, refreshing...');
+            fetchAgentHistory();
+        };
+
+        window.electron.listenAgentHistoryUpdated(handleAgentHistoryUpdated);
+
+        // Cleanup listener on unmount
+        return () => {
+            // Note: There's no cleanup method exposed in the current preload setup
+            // This is a limitation of the current implementation
+        };
+    }, []);
+
     if (voiceMode) {
         return (
             <div className='flex-1 flex'>
@@ -784,14 +799,14 @@ export default function AiAgent({ toggleMenu }: Props) {
                             <p className="text-xs text-[#7A7B82] mt-1">Complete agent operations record</p>
                         </div>
                         
-                        <div className="flex-1 overflow-y-auto px-2 py-4 record-panel-scroll">
+                        <div className="flex-1 overflow-y-auto px-2 py-4 record-panel-scroll min-w-0">
                             {isLoadingHistory ? (
                                 <div className="flex items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-400 border-t-transparent"></div>
                                     <span className="ml-2 text-sm text-gray-400">Loading history...</span>
                                 </div>
                             ) : agentHistory.length > 0 ? (
-                                <div className="space-y-2">
+                                <div className="space-y-2 min-w-0">
                                     {agentHistory.map((record) => (
                                         <HistoryCard key={record._id} record={record} />
                                     ))}
@@ -922,14 +937,14 @@ export default function AiAgent({ toggleMenu }: Props) {
                         <p className="text-xs text-[#7A7B82] mt-1">Complete agent operations record</p>
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto px-2 py-4 record-panel-scroll">
+                    <div className="flex-1 overflow-y-auto px-2 py-4 record-panel-scroll min-w-0">
                         {isLoadingHistory ? (
                             <div className="flex items-center justify-center py-8">
                                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-400 border-t-transparent"></div>
                                 <span className="ml-2 text-sm text-gray-400">Loading history...</span>
                             </div>
                         ) : agentHistory.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-2 min-w-0">
                                 {agentHistory.map((record) => (
                                     <HistoryCard key={record._id} record={record} />
                                 ))}

@@ -147,6 +147,10 @@ app.on('ready', () => {
       const result = await fileSysAgent(payload.query);
       await generateSpeechFile(result, './output');
       console.log("Finished processing AI Recording Res")
+      
+      // Notify frontend that agent history has been updated
+      ipcWebContentSend("agentHistoryUpdated", mainWindow.webContents, undefined);
+      
       return result;
     } catch (error) {
       console.error("Error in AI query handler:", error);
@@ -220,6 +224,9 @@ app.on('ready', () => {
       
       // Process audio data immediately - transcribe and save to file
       await processAudioData(audioData);
+      
+      // Notify frontend that agent history has been updated
+      ipcWebContentSend("agentHistoryUpdated", mainWindow.webContents, undefined);
       
       return;
     } catch (err) {

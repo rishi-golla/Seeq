@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("electron", {
     startFileDrag: (filePath: string) => ipcRenderer.send("startFileDrag", { filePath }),
     getOperationsLog: () => ipcInvoke("getOperationsLog"),
     getAgentHistory: () => ipcInvoke("getAgentHistory"),
+    listenAgentHistoryUpdated: (callback: () => void) => ipcOn("agentHistoryUpdated", callback),
 } satisfies Window['electron'])
 
 function ipcInvoke<Key extends keyof EventPaylaodMapping>(

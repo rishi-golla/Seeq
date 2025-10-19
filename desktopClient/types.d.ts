@@ -17,6 +17,7 @@ type EventPaylaodMapping = { //Different ipc mappings when responding
     openWithDefault: { target: string };
     getOperationsLog: void;
     getAgentHistory: void;
+    agentHistoryUpdated: void; // Notify frontend when agent history is updated
 }
 
 type EventReturnMapping = { //Different ipc return types
@@ -48,6 +49,7 @@ type EventReturnMapping = { //Different ipc return types
         createdAt: string;
         updatedAt: string;
     }[];
+    agentHistoryUpdated: void; // Notify frontend when agent history is updated
 }
 
 interface Window { //Used in frontend through exposed ipc functions
@@ -80,5 +82,6 @@ interface Window { //Used in frontend through exposed ipc functions
             createdAt: string;
             updatedAt: string;
         }[]>;
+        listenAgentHistoryUpdated: (callback: () => void) => void;
     }
 }
