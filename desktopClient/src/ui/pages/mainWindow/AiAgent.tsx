@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import send from '../../icons/aiAgent/send.svg';
 import mainIcon from '../../icons/aiAgent/SeeqFaded.png';
 import voiceAgent from '../../icons/aiAgent/voiceMode.svg'
+import seeqTalkingGif from '../../icons/SeeqTalking.gif';
+import seeqMouthClosed from '../../icons/SeeqMouthClosed.png';
 
 interface Props {
     toggleMenu: boolean;
@@ -668,74 +670,103 @@ export default function AiAgent({ toggleMenu }: Props) {
                         <p className="text-xs px-4 text-[#7A7B82]">Complete agent operations record</p>
                     </div>
                 )}
-                <div className="flex-1 flex flex-col items-center justify-center bg-[#141518]">
-                    <div className="relative mb-8">
-                        <div className={`w-40 h-40 rounded-full bg-gradient-to-br ${
+                <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-[#141518] via-[#1a1d24] to-[#141518] relative overflow-hidden">
+                    {/* Background decorative elements */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className={`absolute top-20 left-20 w-64 h-64 rounded-full blur-3xl opacity-20 transition-colors duration-1000 ${
                             isRecording 
-                                ? 'from-[#ef4444] to-[#b91c1c] animate-pulse shadow-[0_0_40px_#ef4444]/50' 
+                                ? 'bg-red-500' 
                                 : isProcessing
-                                    ? 'from-[#ef4444] to-[#b91c1c] animate-pulse shadow-[0_0_40px_#ef4444]/50'
+                                    ? 'bg-red-500'
                                     : isPlaying
-                                        ? 'from-[#10b981] to-[#047857] animate-pulse shadow-[0_0_40px_#10b981]/50'
-                                        : 'from-[#3b82f6] to-[#1d4ed8] animate-pulse shadow-[0_0_40px_#3b82f6]/50'
+                                        ? 'bg-green-500'
+                                        : 'bg-blue-500'
                         }`} />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-24 h-24 rounded-full bg-[#141518] shadow-inner" />
+                        <div className={`absolute bottom-20 right-20 w-64 h-64 rounded-full blur-3xl opacity-20 transition-colors duration-1000 ${
+                            isRecording 
+                                ? 'bg-orange-500' 
+                                : isProcessing
+                                    ? 'bg-orange-500'
+                                    : isPlaying
+                                        ? 'bg-emerald-500'
+                                        : 'bg-indigo-500'
+                        }`} />
+                    </div>
+                    
+                    {/* Main content */}
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="relative mb-12">
+                            <img 
+                                src={isPlaying ? seeqTalkingGif : seeqMouthClosed} 
+                                alt="Seeq Voice Agent" 
+                                className={`w-64 h-64 rounded-full transition-all duration-300 ${
+                                    isRecording 
+                                        ? 'shadow-[0_0_60px_#ef4444]/50 scale-105' 
+                                        : isProcessing
+                                            ? 'shadow-[0_0_60px_#ef4444]/50 scale-105'
+                                            : isPlaying
+                                                ? 'shadow-[0_0_60px_#10b981]/60 scale-110'
+                                                : 'shadow-[0_0_50px_#3b82f6]/40'
+                                }`} 
+                            />
+                        </div>
+                        
+                        <div className="flex gap-4 mb-6">
+                            <button
+                                onClick={() => {
+                                    // Stop any playing audio
+                                    if (audioPlayerRef.current) {
+                                        audioPlayerRef.current.pause();
+                                        audioPlayerRef.current = null;
+                                    }
+                                    setVoiceMode(false);
+                                }}
+                                className="bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-3 rounded-2xl text-white font-semibold hover:from-gray-700 hover:to-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                            >
+                                Exit Voice Mode
+                            </button>
+                            
+                            {isRecording ? (
+                                <button
+                                    onClick={stopRecording}
+                                    className="bg-gradient-to-r from-red-600 to-red-700 px-8 py-3 rounded-2xl text-white font-semibold hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transform hover:scale-105 active:scale-95 animate-pulse"
+                                >
+                                    Stop Recording
+                                </button>
+                            ) : isProcessing ? (
+                                <div className="bg-gradient-to-r from-red-600 to-orange-600 px-8 py-3 rounded-2xl text-white font-semibold shadow-lg shadow-red-500/30 animate-pulse flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    Processing...
+                                </div>
+                            ) : isPlaying ? (
+                                <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-3 rounded-2xl text-white font-semibold shadow-lg shadow-green-500/30 animate-pulse flex items-center gap-2">
+                                    Playing Response...
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={startRecording}
+                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-3 rounded-2xl text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:scale-105 active:scale-95"
+                                >
+                                    {responseAudioPath ? 'Record Again' : 'Start Recording'}
+                                </button>
+                            )}
+                        </div>
+                        
+                        <div className="bg-[#1A1B1F]/80 backdrop-blur-sm rounded-2xl px-8 py-4 max-w-xl border border-gray-700/50 shadow-xl">
+                            <p className="text-gray-300 text-center text-base leading-relaxed">
+                                {isRecording 
+                                    ? "Recording... Speak clearly and I'll transcribe your message. Pauses will be detected automatically." 
+                                    : isProcessing
+                                        ? "Processing your request... Please wait while I analyze your message."
+                                        : isPlaying
+                                            ? "Playing the agent's response. When finished, you can record again."
+                                            : responseAudioPath
+                                                ? "Ready for your next question. Click 'Record Again' to continue."
+                                                : "Welcome! Click 'Start Recording' and speak your message. I'll transcribe it and respond."
+                                }
+                            </p>
                         </div>
                     </div>
-                    
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => {
-                                // Stop any playing audio
-                                if (audioPlayerRef.current) {
-                                    audioPlayerRef.current.pause();
-                                    audioPlayerRef.current = null;
-                                }
-                                setVoiceMode(false);
-                            }}
-                            className="bg-[#4E5057] px-6 py-2 rounded-xl text-white font-medium hover:bg-gray-600 transition-all"
-                        >
-                            Exit
-                        </button>
-                        
-                        {isRecording ? (
-                            <button
-                                onClick={stopRecording}
-                                className="bg-red-600 px-6 py-2 rounded-xl text-white font-medium hover:bg-red-700 transition-all"
-                            >
-                                Stop Recording
-                            </button>
-                        ) : isProcessing ? (
-                            <div className="bg-red-600 px-6 py-2 rounded-xl text-white font-medium">
-                                Processing...
-                            </div>
-                        ) : isPlaying ? (
-                            <div className="bg-green-600 px-6 py-2 rounded-xl text-white font-medium">
-                                Playing Response...
-                            </div>
-                        ) : (
-                            <button
-                                onClick={startRecording}
-                                className="bg-blue-600 px-6 py-2 rounded-xl text-white font-medium hover:bg-blue-700 transition-all"
-                            >
-                                {responseAudioPath ? 'Record Again' : 'Start Recording'}
-                            </button>
-                        )}
-                    </div>
-                    
-                    <p className="text-gray-400 mt-4 text-center max-w-md">
-                        {isRecording 
-                            ? "Recording... Speak clearly and I'll transcribe your message. Pauses will be detected to know when to stop listening." 
-                            : isProcessing
-                                ? "Processing your request... Please wait while I analyze your message."
-                                : isPlaying
-                                    ? "Playing the agent's response. When finished, you can record again."
-                                    : responseAudioPath
-                                        ? "Click 'Record Again' to ask another question."
-                                        : "Click 'Start Recording' and speak your message. I'll transcribe it and respond."
-                        }
-                    </p>
                 </div>
             </div>
         );
@@ -797,7 +828,7 @@ export default function AiAgent({ toggleMenu }: Props) {
                             <div className="flex-1 flex flex-col gap-1 items-center pt-5">
                                 <h1 className="font-semibold text-2xl text-gray-400">Ask me anything</h1>
                                 <h1 className="font-semibold text-2xl">Can help you with all your file troubles</h1>
-                                <img src={mainIcon} className="w-100 no-highlight" />
+                                <img src={mainIcon} className="w-120 no-highlight" />
                             </div>
                         )}
                     </div>
