@@ -2,6 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useState } from 'react';
 
 // Define the form schema with Zod
 const automationSchema = z.object({
@@ -14,6 +15,10 @@ const automationSchema = z.object({
 type AutomationFormData = z.infer<typeof automationSchema>;
 
 export default function Automation() {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [output, setOutput] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
   const {
     register,
     handleSubmit,
@@ -27,8 +32,21 @@ export default function Automation() {
     },
   });
 
-  const onSubmit = (data: AutomationFormData) => {
+  const onSubmit = async (data: AutomationFormData) => {
     console.log('Form submitted with data:', data);
+    setIsGenerating(true);
+    setError('');
+    setOutput('');
+
+    try {
+      const result = await window.electron.createDocument(data.prompt, data.documentType);
+      setOutput(result);
+    } catch (err) {
+      console.error('Error creating document:', err);
+      setError('Failed to create document. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Watch form values for real-time updates
@@ -108,9 +126,17 @@ export default function Automation() {
           <button
             type="submit"
             onClick={handleSubmit(onSubmit)}
-            className="w-full mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+            disabled={isGenerating}
+            className="w-full mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Generate Document
+            {isGenerating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Generating...
+              </>
+            ) : (
+              'Generate Document'
+            )}
           </button>
         </div>
       </div>
@@ -119,19 +145,72 @@ export default function Automation() {
       <div className="flex-1 rounded-lg shadow-sm border border-gray-600 p-4 flex flex-col" style={{ backgroundColor: '#1A1B1F' }}>
         <div className="mb-3">
           <h3 className="text-lg font-medium text-white mb-1">Output</h3>
-          <p className="text-xs text-gray-400">Your generated document will appear here. Download or copy the content when ready.</p>
+          <p className="text-xs text-gray-400">
+            {isGenerating 
+              ? 'Generating your document...' 
+              : output 
+                ? 'Document generated successfully!' 
+                : 'Your generated document will appear here. Download or copy the content when ready.'
+            }
+          </p>
         </div>
-        <div className="flex-1 bg-gray-800 rounded-md border border-gray-600 p-4 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-700 flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+        <div className="flex-1 bg-gray-800 rounded-md border border-gray-600 p-4 flex flex-col">
+          {isGenerating ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-blue-600 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                </div>
+                <p className="text-gray-400 text-sm">Generating document...</p>
+              </div>
             </div>
-            <p className="text-gray-400 text-sm">
-              Generated document will appear here
-            </p>
-          </div>
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-red-600 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            </div>
+          ) : output ? (
+            <div className="flex-1 flex flex-col">
+              <div className="flex-1 bg-gray-900 rounded-md p-4 overflow-y-auto">
+                <pre className="text-gray-300 text-sm whitespace-pre-wrap font-mono">
+                  {output}
+                </pre>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => navigator.clipboard.writeText(output)}
+                  className="px-3 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                >
+                  Copy to Clipboard
+                </button>
+                <button
+                  onClick={() => setOutput('')}
+                  className="px-3 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-700 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <p className="text-gray-400 text-sm">
+                  Generated document will appear here
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
